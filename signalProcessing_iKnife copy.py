@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
-X = np.load("/Users/JoshEhrlich/OneDrive - Queen's University/School/University/Graduate School/Pico Export Data/sample_data/x.npy")
-Y = np.load("/Users/JoshEhrlich/OneDrive - Queen's University/School/University/Graduate School/Pico Export Data/sample_data/y.npy")
+X = np.load("/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/OldWork/x.npy")
+#Y = np.load("/Users/JoshEhrlich/OneDrive - Queen's University/School/University/Graduate School/Pico Export Data/sample_data/y.npy")
 
 sample1 = X[2]
 print(X.shape)
