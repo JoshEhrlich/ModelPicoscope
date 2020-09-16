@@ -13,7 +13,8 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn import svm, datasets
 
-os.chdir("/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/ModelPicoscope/data/")
+dir_path = os.path.dirname(os.path.realpath(__file__))
+os.chdir(os.path.join(dir_path, 'data'))
 
 airCut = np.loadtxt('20us_cut_air_01.txt')
 tissueCut = np.loadtxt('20us_cut_tissue_01.txt')
