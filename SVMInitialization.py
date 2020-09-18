@@ -22,7 +22,7 @@ tissueCut = np.loadtxt('20us_cut_tissue_01.txt')
 airCoag = np.loadtxt('20us_coag_air_01.txt')
 tissueCoag = np.loadtxt('20us_coag_tissue_01.txt')
 
-#Break up np array
+#Break up array
 
 timeAirCut = airCut[:,0]
 channelAAirCut = airCut[:,1]
