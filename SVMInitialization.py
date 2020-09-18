@@ -13,7 +13,8 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn import svm, datasets
 
-dir_path = os.path.dirname(os.path.abspath(__file__))
+dir_path = "/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/ModelPicoscope/"
+#dir_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(os.path.join(dir_path, 'data'))
 
 airCut = np.loadtxt('20us_cut_air_01.txt')
@@ -42,23 +43,29 @@ channelBTissueCoag = tissueCoag[:,2]
 
 #Visualization:
 
-print("")
 plt.plot(timeAirCut, channelBAirCut)
 plt.title("Air_Cut")
-plt.show()
+#plt.show()
 
 plt.plot(timeTissueCut, channelBTissueCut)
 plt.title("Tissue_Cut")
-plt.show()
+#plt.show()
 
 plt.plot(timeAirCoag, channelBAirCoag)
 plt.title("Air_Coag")
-plt.show()
+#plt.show()
 
 plt.plot(timeTissueCoag, channelBTissueCoag)
 plt.title("Tissue_Coag")
-plt.show()
+#plt.show()
 
+def mean(channel):
+
+    mean = np.mean(channel)
+
+    return mean
+print(mean(channelBAirCut))
+print(mean(channelBTissueCut))
 
 feat = np.empty([200,2])
 
@@ -93,6 +100,7 @@ two = np.full((50,1),2)
 three = np.full((50,1),3)
 
 Y = np.concatenate((zero,one,two,three))
+Y = Y.squeeze()
 
 X_training, X_test, Y_train, Y_test = train_test_split(feat, Y, test_size=0.2, random_state=42)
 
