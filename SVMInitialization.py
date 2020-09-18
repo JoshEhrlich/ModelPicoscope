@@ -13,7 +13,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn import svm, datasets
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(os.path.join(dir_path, 'data'))
 
 airCut = np.loadtxt('20us_cut_air_01.txt')
@@ -45,15 +45,15 @@ channelBTissueCoag = tissueCoag[:,2]
 print("")
 plt.plot(timeAirCut, channelBAirCut)
 plt.title("Air_Cut")
-
+plt.show()
 
 plt.plot(timeTissueCut, channelBTissueCut)
 plt.title("Tissue_Cut")
-
+plt.show()
 
 plt.plot(timeAirCoag, channelBAirCoag)
 plt.title("Air_Coag")
-
+plt.show()
 
 plt.plot(timeTissueCoag, channelBTissueCoag)
 plt.title("Tissue_Coag")
