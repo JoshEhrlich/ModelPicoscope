@@ -2,6 +2,7 @@ import os
 from sklearn import datasets
 from sklearn import svm    			
 import numpy as np
+import scipy as sy
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import random
@@ -64,9 +65,33 @@ def mean(channel):
     mean = np.mean(channel)
 
     return mean
-print(mean(channelBAirCut))
-print(mean(channelBTissueCut))
 
+def fft(channel):
+
+    frequency = np.mean((np.fft.fft(channel))).real
+
+    return frequency
+
+def testFreq(channel):
+
+    testFreq = sy.fft(channel).real
+
+    return testFreq
+
+def minumum(channel):
+
+    minimum = np.minimum(channel)
+
+    return minimum
+
+def maximum(channel):
+
+    maximum = np.maximum(channel)
+
+    return maximum
+
+print(testFreq(channelBAirCoag))
+print(fft(channelBTissueCoag))
 feat = np.empty([200,2])
 
 for i in range(0, 50):
