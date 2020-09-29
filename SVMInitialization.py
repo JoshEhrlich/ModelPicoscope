@@ -7,12 +7,24 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import random
 from sklearn import metrics
+import numpy.fft as fftt
 from scipy.fftpack import fft
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import plot_roc_curve
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import roc_curve, auc
 from sklearn import svm, datasets
+from scipy.signal import butter,filtfilt
+import chart_studio.plotly as py
+import plotly.graph_objs as go
+import plotly.figure_factory as ff
+
+import numpy as np
+import pandas as pd
+import scipy
+
+from scipy import signal
+
 
 dir_path = "/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/ModelPicoscope/"
 #dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -86,12 +98,64 @@ def minumum(channel):
 
 def maximum(channel):
 
-    maximum = np.maximum(channel)
+    maximum = np.amax(channel)
 
     return maximum
 
-print(testFreq(channelBAirCoag))
-print(fft(channelBTissueCoag))
+#@MARK
+'''
+#Low Pass Frequency Filter
+x = list(timeAirCut)
+y = list(channelATissueCut)
+
+fc = 0.08 #cutoff frequency as a fraction of the sampling rate
+
+b = 1 #transition band as a fraction of the sampling rate
+N = int(np.ceil((4/b))) #must be odd number?? 
+if not N % 2: N+=1
+n = np.arange(N)
+
+sinc_func = np.sinc(2 * fc * (n - (N - 1) / 2.))
+window = 0.42 - 0.5 * np.cos(2 * np.pi * n / (N - 1)) + 0.08 * np.cos(4 * np.pi * n / (N - 1))
+sinc_func = sinc_func * window
+sinc_func = sinc_func / np.sum(sinc_func)
+
+s = y
+new_signal = np.convolve(s, sinc_func)
+
+trace1 = go.Scatter(
+    x=list(range(len(new_signal))),
+    y=new_signal,
+    mode='lines',
+    name='Low-Pass Filter',
+    marker=dict(
+        color='#C54C82'
+    )
+)
+
+
+layout = go.Layout(
+    title='Low-Pass Filter',
+    showlegend=True
+)
+trace_data = [trace1]
+
+fig = go.Figure(data=trace_data, layout=layout)
+
+fig.show()
+'''
+spectrum = fftt.fft(channelBTissueCut)
+freq = fftt.fftfreq(len(spectrum))
+threashold = 0.5 * max(abs(spectrum))
+mask = abs(spectrum) > threashold
+peaks = freq[mask]
+plt.plot(freq, abs(spectrum))
+plt.show()
+
+
+
+print("testFreq", testFreq(channelBAirCoag))
+print("fft:", fft(channelBTissueCoag))
 feat = np.empty([200,2])
 
 for i in range(0, 50):
