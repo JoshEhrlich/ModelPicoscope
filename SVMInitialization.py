@@ -102,62 +102,51 @@ def maximum(channel):
 
     return maximum
 
-#@MARK
-'''
-#Low Pass Frequency Filter
-x = list(timeAirCut)
-y = list(channelATissueCut)
+def absSum(channel):
 
-fc = 0.08 #cutoff frequency as a fraction of the sampling rate
+    absSum = np.sum(np.absolute(channel))
 
-b = 1 #transition band as a fraction of the sampling rate
-N = int(np.ceil((4/b))) #must be odd number?? 
-if not N % 2: N+=1
-n = np.arange(N)
+    return absSum
 
-sinc_func = np.sinc(2 * fc * (n - (N - 1) / 2.))
-window = 0.42 - 0.5 * np.cos(2 * np.pi * n / (N - 1)) + 0.08 * np.cos(4 * np.pi * n / (N - 1))
-sinc_func = sinc_func * window
-sinc_func = sinc_func / np.sum(sinc_func)
+def absMean(channel):
 
-s = y
-new_signal = np.convolve(s, sinc_func)
+    absMean = np.mean(np.absolute(channel))
 
-trace1 = go.Scatter(
-    x=list(range(len(new_signal))),
-    y=new_signal,
-    mode='lines',
-    name='Low-Pass Filter',
-    marker=dict(
-        color='#C54C82'
-    )
-)
+    return absMean
 
+#idk what this testing was. saw it online.
+spectrumA = fftt.fft(channelBAirCut)
+freqA = fftt.fftfreq(len(spectrumA))
+threasholdA = 0.5 * max(abs(spectrumA))
+maskA = abs(spectrumA) > threasholdA
+peaksA = freqA[maskA]
 
-layout = go.Layout(
-    title='Low-Pass Filter',
-    showlegend=True
-)
-trace_data = [trace1]
+spectrumT = fftt.fft(channelBTissueCut)
+freqT = fftt.fftfreq(len(spectrumT))
+threasholdT = 0.5 * max(abs(spectrumT))
+maskT = abs(spectrumT) > threasholdT
+peaksT = freqT[maskT]
+plt.plot(freqT, abs(spectrumT))
+#plt.show()
 
-fig = go.Figure(data=trace_data, layout=layout)
+#print("A", peaksA, "T", peaksT)
 
-fig.show()
-'''
-spectrum = fftt.fft(channelBTissueCut)
-freq = fftt.fftfreq(len(spectrum))
-threashold = 0.5 * max(abs(spectrum))
-mask = abs(spectrum) > threashold
-peaks = freq[mask]
-plt.plot(freq, abs(spectrum))
-plt.show()
+absMeanA = absMean(channelAAirCut)
+absMeanT = absMean(channelATissueCut)
 
+print("air:", absMeanA,"tis", absMeanT)
 
-
-print("testFreq", testFreq(channelBAirCoag))
-print("fft:", fft(channelBTissueCoag))
 feat = np.empty([200,2])
 
+"""
+training:
+
+extract all files of same type cuA, cuT, coA, coT (how many do I need?)
+    a. get a list of file names in given folder
+    b. save type (0/1/2/3 = cuA/cuT/coA/coT)
+    c. run analysis and get 1 number for each function on every file. Thus where x = number of functions, we have x * files of numbers
+
+"""
 for i in range(0, 50):
     #How do I make this cleaner?
     data = channelBAirCut[i*50:50+i*50]
