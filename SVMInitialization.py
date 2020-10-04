@@ -18,7 +18,7 @@ from scipy.signal import butter,filtfilt
 import chart_studio.plotly as py
 import plotly.graph_objs as go
 import plotly.figure_factory as ff
-
+import glob
 import numpy as np
 import pandas as pd
 import scipy
@@ -26,33 +26,54 @@ import scipy
 from scipy import signal
 
 
-dir_path = "/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/ModelPicoscope/"
-#dir_path = os.path.dirname(os.path.abspath(__file__))
-os.chdir(os.path.join(dir_path, 'data'))
+dir_path = "/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/ModelPicoscope/Data/Data/"
+#os.chdir(os.path.join(dir_path, 'data'))
 
-airCut = np.loadtxt('20us_cut_air_01.txt')
-tissueCut = np.loadtxt('20us_cut_tissue_01.txt')
 
-airCoag = np.loadtxt('20us_coag_air_01.txt')
-tissueCoag = np.loadtxt('20us_coag_tissue_01.txt')
+os.chdir(dir_path)
+listOfFiles = glob.glob("*.txt")
+channelAAirCut = np.zeros((2504,5))
+channelBAirCut = np.zeros((2504,5))
+channelATissueCut = np.zeros((2504,5))
+channelBTissueCut = np.zeros((2504,5))
+channelAAirCoag = np.zeros((2504,5))
+channelBAirCoag = np.zeros((2504,5))
+channelATissueCoag = np.zeros((2504,5))
+channelBTissueCoag = np.zeros((2504,5))
 
-#Break up array
-
-timeAirCut = airCut[:,0]
-channelAAirCut = airCut[:,1]
-channelBAirCut = airCut[:,2]
-
-timeTissueCut = tissueCut[:,0]
-channelATissueCut = tissueCut[:,1]
-channelBTissueCut = tissueCut[:,2]
-
-timeAirCoag = airCoag[:,0]
-channelAAirCoag = airCoag[:,1]
-channelBAirCoag = airCoag[:,2]
-
-timeTissueCoag = tissueCoag[:,0]
-channelATissueCoag = tissueCoag[:,1]
-channelBTissueCoag = tissueCoag[:,2]
+cu_aCount = 0
+cu_tCount = 0
+co_aCount = 0
+co_tCount = 0
+for file in listOfFiles:
+    if "cut_air" in file:
+        cut_air = np.loadtxt(file)
+        channelA = cut_air[:,1]
+        channelB = cut_air[:,2]
+        channelAAirCut[:,cu_aCount] = channelA
+        channelBAirCut[:,cu_aCount] = channelB
+        cu_aCount += 1
+    elif "cut_tissue" in file:
+        cut_tissue = np.loadtxt(file)
+        channelA = cut_tissue[:,1]
+        channelB = cut_tissue[:,2]
+        channelATissueCut[:,cu_tCount] = channelA
+        channelBTissueCut[:,cu_tCount] = channelB
+        cu_tCount += 1
+    elif "coag_air" in file:
+        coag_air = np.loadtxt(file)
+        channelA = coag_air[:,1]
+        channelB = coag_air[:,2]
+        channelAAirCoag[:,co_aCount] = channelA
+        channelBAirCoag[:,co_aCount] = channelB
+        co_aCount += 1
+    else:
+        coag_tissue = np.loadtxt(file)
+        channelA = coag_tissue[:,1]
+        channelB = coag_tissue[:,2]
+        channelATissueCoag[:,co_tCount] = channelA
+        channelBTissueCoag[:,co_tCount] = channelB
+        co_tCount += 1
 
 #Visualization:
 
@@ -113,6 +134,31 @@ def absMean(channel):
     absMean = np.mean(np.absolute(channel))
 
     return absMean
+    
+def stdev(channel):
+
+    stdev = np.std(channeL)
+    
+    return stdev
+    
+def absStdev(channel):
+
+    absStdev = np.stdev(np.absolute(channel))
+    
+    return absStdev
+
+def lmrSum(channelA, channelB):
+    
+    lmrSum = absSum(channelA) - absSum(channelB)
+    
+    return lmrSum
+
+def lmrMean(channelA, channelB):
+    
+    lmrMean = absMean(channelA) - absSum(channelB)
+    
+    return lmrMean
+
 
 #idk what this testing was. saw it online.
 spectrumA = fftt.fft(channelBAirCut)
@@ -131,10 +177,10 @@ plt.plot(freqT, abs(spectrumT))
 
 #print("A", peaksA, "T", peaksT)
 
-absMeanA = absMean(channelAAirCut)
-absMeanT = absMean(channelATissueCut)
+lmrMeanA = lmrMean(channelAAirCut, channelBAirCut)
+lmrMeanT = lmrMean(channelATissueCut, channelBTissueCut)
 
-print("air:", absMeanA,"tis", absMeanT)
+print("air:", lmrMeanA,"tissue:", lmrMeanT)
 
 feat = np.empty([200,2])
 
@@ -183,7 +229,7 @@ Y = Y.squeeze()
 X_training, X_test, Y_train, Y_test = train_test_split(feat, Y, test_size=0.2, random_state=42)
 
 '''
-SVM#1 Mean  vs. FFT
+#SVM#1 Mean  vs. FFT
 '''
 
 C = 1.0
@@ -228,3 +274,4 @@ for i, clf in enumerate((svc, lin_svc, rbf_svc, poly_svc)):
 	 plt.xticks(())
 	 plt.yticks(())
 	 plt.title(titles[i])
+'''
