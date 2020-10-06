@@ -22,16 +22,15 @@ import glob
 import numpy as np
 import pandas as pd
 import scipy
+from mlxtend.plotting import plot_decision_regions
 
 from scipy import signal
 
 
 dir_path = "/Users/JoshEhrlich/OneDrive - Queen's University/School/University/MSc/PicoscopeAnalysis/ModelPicoscope/Data/Data/"
-#os.chdir(os.path.join(dir_path, 'data'))
-
-
 os.chdir(dir_path)
 listOfFiles = glob.glob("*.txt")
+
 channelAAirCut = np.zeros((2504,5))
 channelBAirCut = np.zeros((2504,5))
 channelATissueCut = np.zeros((2504,5))
@@ -45,53 +44,44 @@ cu_aCount = 0
 cu_tCount = 0
 co_aCount = 0
 co_tCount = 0
+
 for file in listOfFiles:
+
     if "cut_air" in file:
+    
         cut_air = np.loadtxt(file)
         channelA = cut_air[:,1]
         channelB = cut_air[:,2]
         channelAAirCut[:,cu_aCount] = channelA
         channelBAirCut[:,cu_aCount] = channelB
         cu_aCount += 1
+        
     elif "cut_tissue" in file:
+    
         cut_tissue = np.loadtxt(file)
         channelA = cut_tissue[:,1]
         channelB = cut_tissue[:,2]
         channelATissueCut[:,cu_tCount] = channelA
         channelBTissueCut[:,cu_tCount] = channelB
         cu_tCount += 1
+        
     elif "coag_air" in file:
+    
         coag_air = np.loadtxt(file)
         channelA = coag_air[:,1]
         channelB = coag_air[:,2]
         channelAAirCoag[:,co_aCount] = channelA
         channelBAirCoag[:,co_aCount] = channelB
         co_aCount += 1
+        
     else:
+    
         coag_tissue = np.loadtxt(file)
         channelA = coag_tissue[:,1]
         channelB = coag_tissue[:,2]
         channelATissueCoag[:,co_tCount] = channelA
         channelBTissueCoag[:,co_tCount] = channelB
         co_tCount += 1
-
-#Visualization:
-
-plt.plot(timeAirCut, channelBAirCut)
-plt.title("Air_Cut")
-#plt.show()
-
-plt.plot(timeTissueCut, channelBTissueCut)
-plt.title("Tissue_Cut")
-#plt.show()
-
-plt.plot(timeAirCoag, channelBAirCoag)
-plt.title("Air_Coag")
-#plt.show()
-
-plt.plot(timeTissueCoag, channelBTissueCoag)
-plt.title("Tissue_Coag")
-#plt.show()
 
 def mean(channel):
 
@@ -143,7 +133,7 @@ def stdev(channel):
     
 def absStdev(channel):
 
-    absStdev = np.stdev(np.absolute(channel))
+    absStdev = ((np.std(np.absolute(channel))) * 100)
     
     return absStdev
 
@@ -155,34 +145,19 @@ def lmrSum(channelA, channelB):
 
 def lmrMean(channelA, channelB):
     
-    lmrMean = absMean(channelA) - absSum(channelB)
+    lmrMean = (absMean(channelA - channelB)) * 100
     
     return lmrMean
 
+def mMean(channelA, channelB):
+    
+    mMean = (absMean(channelA) * absSum(channelB)) * 10000
+    
+    return mMean
 
-#idk what this testing was. saw it online.
-spectrumA = fftt.fft(channelBAirCut)
-freqA = fftt.fftfreq(len(spectrumA))
-threasholdA = 0.5 * max(abs(spectrumA))
-maskA = abs(spectrumA) > threasholdA
-peaksA = freqA[maskA]
+print("Air:", mMean(channelAAirCoag[1], channelBAirCoag[1]), "Tissue:", mMean(channelATissueCoag[1], channelBTissueCoag[1]))
 
-spectrumT = fftt.fft(channelBTissueCut)
-freqT = fftt.fftfreq(len(spectrumT))
-threasholdT = 0.5 * max(abs(spectrumT))
-maskT = abs(spectrumT) > threasholdT
-peaksT = freqT[maskT]
-plt.plot(freqT, abs(spectrumT))
-#plt.show()
-
-#print("A", peaksA, "T", peaksT)
-
-lmrMeanA = lmrMean(channelAAirCut, channelBAirCut)
-lmrMeanT = lmrMean(channelATissueCut, channelBTissueCut)
-
-print("air:", lmrMeanA,"tissue:", lmrMeanT)
-
-feat = np.empty([200,2])
+feat = np.empty([20,2])
 
 """
 training:
@@ -193,35 +168,36 @@ extract all files of same type cuA, cuT, coA, coT (how many do I need?)
     c. run analysis and get 1 number for each function on every file. Thus where x = number of functions, we have x * files of numbers
 
 """
-for i in range(0, 50):
-    #How do I make this cleaner?
-    data = channelBAirCut[i*50:50+i*50]
-    mean = np.mean(data)
-    fft_freq = (np.mean(np.fft.fft(data))).real
-    feat[i][0] = mean
-    feat[i][1] = fft_freq
-    data = channelBTissueCut[i*50:50+i*50]
-    mean = np.mean(data)
-    fft_freq = (np.mean(np.fft.fft(data))).real
-    feat[i+50][0] = mean
-    feat[i+50][1] = fft_freq
-    data = channelBAirCoag[i*50:50+i*50]
-    mean = np.mean(data)
-    fft_freq = (np.mean(np.fft.fft(data))).real
-    feat[i+100][0] = mean
-    feat[i+100][1] = fft_freq
-    data = channelBTissueCoag[i*50:50+i*50]
-    mean = np.mean(data)
-    fft_freq = (np.mean(np.fft.fft(data))).real
-    feat[i+150][0] = mean
-    feat[i+150][1] = fft_freq
+
+for i in range(0, 5):
+
+    lmrMeanCutAir = lmrMean(channelAAirCut[i], channelBAirCut[i])
+    mMeanCutAir = mMean(channelAAirCut[i], channelBAirCut[i])
+    feat[i][0] = lmrMeanCutAir
+    feat[i][1] = mMeanCutAir
+    
+    lmrMeanCutTissue = lmrMean(channelATissueCut[i], channelBTissueCut[i])
+    mMeanCutTissue = mMean(channelATissueCut[i], channelBTissueCut[i])
+    feat[i+5][0] = lmrMeanCutTissue
+    feat[i+5][1] = mMeanCutTissue
+    
+    lmrMeanCoagAir = lmrMean(channelAAirCoag[i], channelBAirCoag[i])
+    mMeanCoagAir = mMean(channelAAirCoag[i], channelBAirCoag[i])
+    feat[i+10][0] = lmrMeanCoagAir
+    feat[i+10][1] = mMeanCoagAir
+    
+    lmrMeanCoagTissue = lmrMean(channelATissueCoag[i], channelBTissueCoag[i])
+    mMeanCoagTissue = mMean(channelATissueCoag[i], channelBTissueCoag[i])
+    feat[i+15][0] = lmrMeanCoagTissue
+    feat[i+15][1] = mMeanCoagTissue
+    
 
 #Build classifier array
 
-zero = np.full((50,1),0)
-one = np.full((50,1),1)
-two = np.full((50,1),2)
-three = np.full((50,1),3)
+zero = np.full((5,1),0)
+one = np.full((5,1),1)
+two = np.full((5,1),2)
+three = np.full((5,1),3)
 
 Y = np.concatenate((zero,one,two,three))
 Y = Y.squeeze()
@@ -254,24 +230,31 @@ titles = ['SVC with linear kernel',
  
  
 for i, clf in enumerate((svc, lin_svc, rbf_svc, poly_svc)):
-	 # Plot the decision boundarY_train. For that, we will assign a color to each
-	 # point in the mesh [X_train_min, X_train_max]X_train[Y_train_min, Y_train_max].
-	 plt.subplot(2, 2, i + 1)
-	 plt.subplots_adjust(wspace=0.4, hspace=0.4)
+    # Plot the decision boundarY_train. For that, we will assign a color to each
+    # point in the mesh [X_train_min, X_train_max]X_train[Y_train_min, Y_train_max].
+    
+    plt.subplot(2, 2, i + 1)
+    plt.subplots_adjust(wspace=0.4, hspace=0.4)
  
-	 Z = clf.predict(np.c_[X_train.ravel(), yy.ravel()])
+    Z = clf.predict(np.c_[X_train.ravel(), yy.ravel()])
  
-	 # Put the result into a color plot
-	 Z = Z.reshape(X_train.shape)
-	 plt.contourf(X_train, yy, Z, cmap=plt.cm.coolwarm, alpha=0.8)
+    # Put the result into a color plot
+    Z = Z.reshape(X_train.shape)
+    plt.contourf(X_train, yy, Z, cmap=plt.cm.coolwarm, alpha=0.8)
  
-	 # Plot also the training points
-	 plt.scatter(X_training[:,0], X_training[:,1], c = Y_train, cmap=plt.cm.coolwarm)
-	 plt.xlabel('Mean')
-	 plt.ylabel('FFT')
-	 plt.xlim(X_train.min(), X_train.max())
-	 plt.ylim(yy.min(), yy.max())
-	 plt.xticks(())
-	 plt.yticks(())
-	 plt.title(titles[i])
-'''
+    # Plot also the training points
+    plt.scatter(X_training[:,0], X_training[:,1], c = Y_train, cmap=plt.cm.coolwarm)
+    plt.xlabel('lmr')
+    plt.ylabel('mMean')
+    plt.xlim(X_train.min(), X_train.max())
+    plt.ylim(yy.min(), yy.max())
+    plt.xticks(())
+    plt.yticks(())
+    plt.title(titles[i])
+    plot_decision_regions(X_training, Y_train, clf = clf, legend=2)
+    d = {"CutAir": 0, "CutTissue": 1, "CoagAir": 2, "CoagTissue": 3}
+    handles, labels =  plt.gca().get_legend_handles_labels()
+    d_rev = {y:x for x,y in d.items()}
+    plt.legend(handles, list(map(d_rev.get, [int(i) for i in d_rev])))
+    
+plt.show()
